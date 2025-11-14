@@ -454,31 +454,31 @@
 </head>
 <body>
     <header>
-        <h1>Anonymous Feelings Poll</h1>
-        <p class="subtitle">Share how you feel and why in complete anonymity</p>
+        <h1>Sentimientos Anónimos</h1>
+        <p class="subtitle">Expresa cómo te sientes y porqué de manera anónima</p>
     </header>
     
     <main>
         <section class="form-container">
             <div class="input-module" id="feeling-module">
                 <h2>How do you feel today?</h2>
-                <p class="instruction">Describe your current emotional state in a few words</p>
-                <textarea id="feeling-input" placeholder="e.g., Happy, Anxious, Excited, Tired..." maxlength="500"></textarea>
+                <p class="instruction">Describe como te sientes en tus propias palabras</p>
+                <textarea id="feeling-input" placeholder="ej., Feliz, Ansioso, Emocionado, Triste, Cansado..." maxlength="500"></textarea>
             </div>
             
             <div class="input-module" id="reason-module">
-                <h2>What makes you feel like that?</h2>
-                <p class="instruction">Share what's behind your feelings (optional but appreciated)</p>
-                <textarea id="reason-input" placeholder="e.g., Because I finished a project, I have an exam tomorrow..." maxlength="500"></textarea>
+                <h2>¿Que motiva ese sentimiento?</h2>
+                <p class="instruction">Expresa que motiva esos sentimientos (¡Opcional! Pero te sentirás mejor.)</p>
+                <textarea id="reason-input" placeholder="por ej., Porque terminé las clases, Mañana tengo exámen..." maxlength="500"></textarea>
             </div>
         </section>
         
         <div class="submit-container">
-            <button class="submit-btn" id="submit-btn">Share My Feelings</button>
+            <button class="submit-btn" id="submit-btn">Comparto mis Sentimientos</button>
         </div>
         
         <section class="heard-section">
-            <h2 class="heard-title">What We've Heard!</h2>
+            <h2 class="heard-title">¡Lo que hemos escuchado!</h2>
             <p style="text-align: center; color: white; margin-bottom: 20px; font-family: 'Caveat', cursive; font-size: 1.2rem;">
                 Click clouds to bring them forward • Triple-click for a surprise!
             </p>
@@ -493,7 +493,7 @@
         <div class="bobblehead-body"></div>
     </div>
     
-    <div class="notification" id="notification">Thanks for sharing!</div>
+    <div class="notification" id="notification">¡Gracias por compartirlo!</div>
     
     <div class="loading" id="loading">
         <div class="loading-spinner"></div>
@@ -518,11 +518,11 @@
         
         // Sample data for demonstration
         const sampleResponses = [
-            { feeling: "I'm feeling happy today!", reason: "The sun is shining and I got to see my friends." },
-            { feeling: "A bit stressed out.", reason: "Work has been really demanding lately." },
-            { feeling: "Excited about the weekend!", reason: "I have plans to go hiking and it's my favorite activity." },
-            { feeling: "Feeling grateful", reason: "My family surprised me with a thoughtful gift." },
-            { feeling: "A little anxious", reason: "I have an important presentation tomorrow." }
+            { feeling: "¡Hoy estoy feliz!", reason: "Brilla el sol y me encontraré con mis amigos." },
+            { feeling: "Estresado.", reason: "El trabajo es muy demandante en esta época del año." },
+            { feeling: "¡Exasperado!", reason: "No logre aprobar matematica." },
+            { feeling: "Me siento agradecido", reason: "Mi familia me dio un regalo por terminar el secundario." },
+            { feeling: "Un tanto ansioso", reason: "Mañana rindo exámen." }
         ];
         
         // Cloud management
@@ -586,7 +586,7 @@
                 bobblehead.style.top = '';
                 
             } catch (error) {
-                console.error('Submission error:', error);
+                console.error('Error al enviar:', error);
                 // Save locally for later sync
                 saveOfflineData(feeling, reason);
             } finally {
@@ -614,11 +614,11 @@
             
             const result = await response.json();
             
-            if (result.status === 'success') {
-                console.log('Data saved successfully');
-                showNotification('Thanks for sharing! Your feelings have been recorded.', 'success');
+            if (result.status === 'Éxito') {
+                console.log('Información guardada correctamente');
+                showNotification('¡Gracias por compartirlo! Tus sentimientos están guardados.', 'Éxito');
             } else {
-                throw new Error(result.message || 'Unknown error');
+                throw new Error(result.message || 'Algo paso');
             }
         }
         
@@ -634,7 +634,7 @@
             storedData.push(offlineData);
             localStorage.setItem('feelingsPollOffline', JSON.stringify(storedData));
             
-            showNotification('Saved offline. Will sync when connection is restored.', 'info');
+            showNotification('Se guardo sin conexión. Se sincronizara cuando haya conexión nuevamente.', 'info');
         }
         
         // Check and sync offline data
@@ -648,14 +648,14 @@
                     try {
                         await sendToGoogleSheets(data.feeling, data.reason);
                     } catch (error) {
-                        console.error('Failed to sync:', error);
+                        console.error('Falla al sincronizar:', error);
                         break; // Stop if sync fails
                     }
                 }
                 
                 // Clear synced data
                 localStorage.removeItem('feelingsPollOffline');
-                showNotification('All offline data synced successfully!', 'success');
+                showNotification('¡Toda la información sin conexión se sincronizo correctamente!', 'Éxito');
             }
         }
         
@@ -749,7 +749,7 @@
                 cloud.classList.remove('pop');
             }, 1500);
             
-            showNotification('💖 You found the secret heart! 💖', 'success');
+            showNotification('💖 ¡Encontraste el corazón secreto! 💖', 'Felicitaciones');
         }
         
         // Show notification
@@ -795,3 +795,5 @@
     </script>
 </body>
 </html>
+
+
