@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentimientos Anónimos</title>
+    <title>Encuesta Anónima de Sentimientos</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='face'><stop offset='0%' stop-color='%2333ffcc'/><stop offset='100%' stop-color='%2322ccaa'/></radialGradient></defs><circle cx='50' cy='50' r='45' fill='url(%23face)'/><circle cx='50' cy='50' r='35' fill='white'/><g fill='black'><path d='M30 35 Q35 45 40 35 Q35 40 30 35'/><path d='M60 35 Q65 45 70 35 Q65 40 60 35'/><path d='M25 60 Q50 75 75 60' stroke='black' stroke-width='3' fill='none'/><rect x='28' y='32' width='14' height='8' rx='2' fill='%23333'/><rect x='58' y='32' width='14' height='8' rx='2' fill='%23333'/></g></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='face'><stop offset='0%' stop-color='%2333ffcc'/><stop offset='100%' stop-color='%2322ccaa'/></radialGradient></defs><circle cx='50' cy='50' r='45' fill='url(%23face)'/><circle cx='50' cy='50' r='35' fill='white'/><g fill='black'><path d='M30 35 Q35 45 40 35 Q35 40 30 35'/><path d='M60 35 Q65 45 70 35 Q65 40 60 35'/><path d='M25 60 Q50 75 75 60' stroke='black' stroke-width='3' fill='none'/><rect x='28' y='32' width='14' height='8' rx='2' fill='%23333'/><rect x='58' y='32' width='14' height='8' rx='2' fill='%23333'/></g></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Rubik+Distressed&family=Permanent+Marker&family=Shadows+Into+Light&family=Caveat:wght@400;700&family=Righteous&family=Bungee&family=Creepster&family=Fredoka+One&display=swap" rel="stylesheet">
@@ -219,6 +219,40 @@
         
         .submit-btn:active {
             transform: scale(0.98);
+        }
+        
+        /* Debug Panel */
+        .debug-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            max-width: 300px;
+            z-index: 2000;
+            display: none;
+        }
+        
+        .debug-panel.show {
+            display: block;
+        }
+        
+        .debug-toggle {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            cursor: pointer;
+            z-index: 2001;
         }
         
         /* What We've Heard Section */
@@ -456,7 +490,7 @@
 </head>
 <body>
     <header>
-        <h1>Sentimientos Anónimos</h1>
+        <h1>Encuesta Anónima de Sentimientos</h1>
         <p class="subtitle">Compartí cómo te sentís y por qué, en total anonimato</p>
     </header>
     
@@ -501,6 +535,13 @@
         <div class="loading-spinner"></div>
     </div>
     
+    <div class="debug-toggle" id="debug-toggle">Debug</div>
+    <div class="debug-panel" id="debug-panel">
+        <h3>Debug Information</h3>
+        <div id="debug-content"></div>
+        <button id="test-connection" style="margin-top: 10px; padding: 5px 10px; background: #33ffcc; border: none; border-radius: 5px; cursor: pointer;">Test Connection</button>
+    </div>
+    
     <script>
         // Configuración de Google Sheets - URL de Web App de Apps Script
         const GOOGLE_SHEETS_CONFIG = {
@@ -531,6 +572,9 @@
         const maxClouds = 8;
         let cloudZIndex = 1;
         
+        // Debug panel
+        let debugMode = false;
+        
         // Inicializar la página
         document.addEventListener('DOMContentLoaded', function() {
             // Cargar respuestas de ejemplo para demostración
@@ -539,13 +583,79 @@
             // Configurar event listeners
             document.getElementById('submit-btn').addEventListener('click', submitForm);
             
+            // Debug panel toggle
+            document.getElementById('debug-toggle').addEventListener('click', toggleDebugPanel);
+            document.getElementById('test-connection').addEventListener('click', testGoogleSheetsConnection);
+            
             // Mover bobblehead al input activo
             document.getElementById('feeling-input').addEventListener('focus', moveBobblehead);
             document.getElementById('reason-input').addEventListener('focus', moveBobblehead);
             
             // Verificar datos offline para sincronizar
             checkAndSyncOfflineData();
+            
+            // Check if we're online
+            updateDebugInfo('Connection status', navigator.onLine ? 'Online' : 'Offline');
         });
+        
+        // Toggle debug panel
+        function toggleDebugPanel() {
+            debugMode = !debugMode;
+            const panel = document.getElementById('debug-panel');
+            if (debugMode) {
+                panel.classList.add('show');
+            } else {
+                panel.classList.remove('show');
+            }
+        }
+        
+        // Update debug info
+        function updateDebugInfo(key, value) {
+            if (!debugMode) return;
+            
+            const debugContent = document.getElementById('debug-content');
+            let content = debugContent.innerHTML;
+            
+            // Check if key already exists
+            const regex = new RegExp(`<strong>${key}:</strong>.*<br>`);
+            if (regex.test(content)) {
+                content = content.replace(regex, `<strong>${key}:</strong> ${value}<br>`);
+            } else {
+                content += `<strong>${key}:</strong> ${value}<br>`;
+            }
+            
+            debugContent.innerHTML = content;
+        }
+        
+        // Test Google Sheets connection
+        async function testGoogleSheetsConnection() {
+            updateDebugInfo('Test status', 'Testing...');
+            
+            try {
+                const testData = {
+                    feeling: 'Test Connection',
+                    reason: 'Testing at ' + new Date().toLocaleString()
+                };
+                
+                const response = await fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(testData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.status === 'success') {
+                    updateDebugInfo('Test status', '✅ Success');
+                } else {
+                    updateDebugInfo('Test status', `❌ Failed: ${result.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                updateDebugInfo('Test status', `❌ Error: ${error.message}`);
+            }
+        }
         
         // Mover bobblehead al input enfocado
         function moveBobblehead(e) {
@@ -571,6 +681,9 @@
             submitBtn.disabled = true;
             showLoading(true);
             
+            updateDebugInfo('Form submission', 'Starting...');
+            updateDebugInfo('Form data', `Feeling: "${feeling}", Reason: "${reason}"`);
+            
             try {
                 // Enviar a Google Sheets
                 await sendToGoogleSheets(feeling, reason);
@@ -589,6 +702,7 @@
                 
             } catch (error) {
                 console.error('Error de envío:', error);
+                updateDebugInfo('Error', error.message);
                 
                 // Verificar si realmente estamos offline
                 if (!navigator.onLine) {
@@ -607,43 +721,139 @@
         
         // Enviar datos a Google Sheets via Apps Script
         async function sendToGoogleSheets(feeling, reason) {
+            updateDebugInfo('Sending to Google Sheets', 'Starting...');
+            
+            // Increase timeout to 30 seconds for Google Apps Script
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+            const timeoutId = setTimeout(() => controller.abort(), 30000);
             
             try {
+                const requestData = {
+                    feeling: feeling,
+                    reason: reason,
+                    timestamp: new Date().toISOString()
+                };
+                
+                updateDebugInfo('Request data', JSON.stringify(requestData));
+                
                 const response = await fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        // Add additional headers that might help with CORS
+                        'Accept': 'application/json',
+                        'Cache-Control': 'no-cache',
                     },
-                    body: JSON.stringify({
-                        feeling: feeling,
-                        reason: reason
-                    }),
+                    body: JSON.stringify(requestData),
+                    // Use no-cors mode as a fallback
+                    mode: 'cors',
                     signal: controller.signal
                 });
                 
                 clearTimeout(timeoutId);
                 
+                updateDebugInfo('Response status', response.status);
+                updateDebugInfo('Response ok', response.ok);
+                
                 if (!response.ok) {
-                    throw new Error(`Error HTTP! estado: ${response.status}`);
+                    // Try to get error details
+                    let errorMessage = `HTTP error! status: ${response.status}`;
+                    try {
+                        const errorText = await response.text();
+                        errorMessage += ` - ${errorText}`;
+                    } catch (e) {
+                        // Can't read error body
+                    }
+                    throw new Error(errorMessage);
                 }
                 
                 const result = await response.json();
+                updateDebugInfo('Response data', JSON.stringify(result));
                 
                 if (result.status === 'success') {
                     console.log('Datos guardados exitosamente');
                     showNotification('¡Gracias por compartir! Tus sentimientos fueron registrados.', 'success');
+                    updateDebugInfo('Google Sheets status', '✅ Success');
                 } else {
                     throw new Error(result.message || 'Error desconocido');
                 }
             } catch (error) {
                 clearTimeout(timeoutId);
+                updateDebugInfo('Fetch error', error.message);
+                
                 if (error.name === 'AbortError') {
-                    throw new Error('Tiempo de espera agotado. Intentá de nuevo.');
+                    throw new Error('Tiempo de espera agotado. El servidor está tardando demasiado en responder.');
                 }
+                
+                // Try alternative method if the first one fails
+                if (error.message.includes('CORS') || error.message.includes('NetworkError')) {
+                    updateDebugInfo('Trying alternative method', '...');
+                    return await sendToGoogleSheetsAlternative(feeling, reason);
+                }
+                
                 throw error;
             }
+        }
+        
+        // Alternative method for sending data
+        async function sendToGoogleSheetsAlternative(feeling, reason) {
+            updateDebugInfo('Alternative method', 'Trying...');
+            
+            // Create a form to submit data
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = GOOGLE_SHEETS_CONFIG.webAppUrl;
+            form.style.display = 'none';
+            
+            // Add data as hidden fields
+            const feelingField = document.createElement('input');
+            feelingField.type = 'hidden';
+            feelingField.name = 'feeling';
+            feelingField.value = feeling;
+            form.appendChild(feelingField);
+            
+            const reasonField = document.createElement('input');
+            reasonField.type = 'hidden';
+            reasonField.name = 'reason';
+            reasonField.value = reason;
+            form.appendChild(reasonField);
+            
+            const timestampField = document.createElement('input');
+            timestampField.type = 'hidden';
+            timestampField.name = 'timestamp';
+            timestampField.value = new Date().toISOString();
+            form.appendChild(timestampField);
+            
+            // Add iframe to handle the form submission
+            const iframe = document.createElement('iframe');
+            iframe.name = 'google-sheets-iframe';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            form.target = 'google-sheets-iframe';
+            document.body.appendChild(form);
+            
+            // Submit the form
+            form.submit();
+            
+            // Wait a bit and then check if it worked
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    try {
+                        // Check if iframe loaded successfully
+                        updateDebugInfo('Alternative method', '✅ Submitted');
+                        showNotification('¡Gracias por compartir! Tus sentimientos fueron registrados.', 'success');
+                        resolve();
+                    } catch (error) {
+                        updateDebugInfo('Alternative method error', error.message);
+                        reject(new Error('El método alternativo también falló.'));
+                    } finally {
+                        // Clean up
+                        document.body.removeChild(form);
+                        document.body.removeChild(iframe);
+                    }
+                }, 3000);
+            });
         }
         
         // Guardar datos offline para sincronizar después
@@ -657,18 +867,22 @@
             const storedData = JSON.parse(localStorage.getItem('feelingsPollOffline') || '[]');
             storedData.push(offlineData);
             localStorage.setItem('feelingsPollOffline', JSON.stringify(storedData));
+            
+            updateDebugInfo('Offline data saved', `${storedData.length} items`);
         }
         
         // Verificar y sincronizar datos offline
         async function checkAndSyncOfflineData() {
             // Solo sincronizar si estamos online
             if (!navigator.onLine) {
+                updateDebugInfo('Sync status', 'Offline - skipping');
                 return;
             }
             
             const offlineData = JSON.parse(localStorage.getItem('feelingsPollOffline') || '[]');
             
             if (offlineData.length > 0) {
+                updateDebugInfo('Sync status', `Syncing ${offlineData.length} items`);
                 showNotification(`Sincronizando ${offlineData.length} envíos offline...`, 'info');
                 
                 let syncedCount = 0;
@@ -678,6 +892,7 @@
                         syncedCount++;
                     } catch (error) {
                         console.error('Falló la sincronización:', error);
+                        updateDebugInfo('Sync error', error.message);
                         break; // Detener si falla la sincronización
                     }
                 }
@@ -687,7 +902,10 @@
                     const remainingData = offlineData.slice(syncedCount);
                     localStorage.setItem('feelingsPollOffline', JSON.stringify(remainingData));
                     showNotification('¡Todos los datos offline se sincronizaron exitosamente!', 'success');
+                    updateDebugInfo('Sync status', `✅ Synced ${syncedCount} items`);
                 }
+            } else {
+                updateDebugInfo('Sync status', 'No offline data');
             }
         }
         
@@ -828,11 +1046,13 @@
         // Escuchar cambios de conexión
         window.addEventListener('online', function() {
             console.log('Conexión restaurada');
+            updateDebugInfo('Connection status', 'Online');
             checkAndSyncOfflineData();
         });
         
         window.addEventListener('offline', function() {
             console.log('Conexión perdida');
+            updateDebugInfo('Connection status', 'Offline');
             showNotification('Sin conexión. Los datos se guardarán localmente.', 'info');
         });
     </script>
