@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sentimientos Anónimos</title>
+    <title>Encuesta Anónima de Sentimientos</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='face'><stop offset='0%' stop-color='%2333ffcc'/><stop offset='100%' stop-color='%2322ccaa'/></radialGradient></defs><circle cx='50' cy='50' r='45' fill='url(%23face)'/><circle cx='50' cy='50' r='35' fill='white'/><g fill='black'><path d='M30 35 Q35 45 40 35 Q35 40 30 35'/><path d='M60 35 Q65 45 70 35 Q65 40 60 35'/><path d='M25 60 Q50 75 75 60' stroke='black' stroke-width='3' fill='none'/><rect x='28' y='32' width='14' height='8' rx='2' fill='%23333'/><rect x='58' y='32' width='14' height='8' rx='2' fill='%23333'/></g></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><defs><radialGradient id='face'><stop offset='0%' stop-color='%2333ffcc'/><stop offset='100%' stop-color='%2322ccaa'/></radialGradient></defs><circle cx='50' cy='50' r='45' fill='url(%23face)'/><circle cx='50' cy='50' r='35' fill='white'/><g fill='black'><path d='M30 35 Q35 45 40 35 Q35 40 30 35'/><path d='M60 35 Q65 45 70 35 Q65 40 60 35'/><path d='M25 60 Q50 75 75 60' stroke='black' stroke-width='3' fill='none'/><rect x='28' y='32' width='14' height='8' rx='2' fill='%23333'/><rect x='58' y='32' width='14' height='8' rx='2' fill='%23333'/></g></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Rubik+Distressed&family=Permanent+Marker&family=Shadows+Into+Light&family=Caveat:wght@400;700&family=Righteous&family=Bungee&family=Creepster&family=Fredoka+One&display=swap" rel="stylesheet">
@@ -490,7 +490,7 @@
 </head>
 <body>
     <header>
-        <h1>Sentimientos Anónimos</h1>
+        <h1>Encuesta Anónima de Sentimientos</h1>
         <p class="subtitle">Compartí cómo te sentís y por qué, en total anonimato</p>
     </header>
     
@@ -719,11 +719,34 @@
             }
         }
         
-        // Enviar datos a Google Sheets via Apps Script
+        // Enviar datos a Google Sheets via Apps Script - Método mejorado
         async function sendToGoogleSheets(feeling, reason) {
             updateDebugInfo('Sending to Google Sheets', 'Starting...');
             
-            // Increase timeout to 30 seconds for Google Apps Script
+            // Try multiple methods in order
+            const methods = [
+                sendWithFetch,
+                sendWithForm,
+                sendWithImage
+            ];
+            
+            for (const method of methods) {
+                try {
+                    updateDebugInfo('Trying method', method.name);
+                    await method(feeling, reason);
+                    updateDebugInfo('Success with', method.name);
+                    return;
+                } catch (error) {
+                    updateDebugInfo('Method failed', `${method.name}: ${error.message}`);
+                    continue;
+                }
+            }
+            
+            throw new Error('Todos los métodos de envío fallaron');
+        }
+        
+        // Method 1: Fetch API
+        async function sendWithFetch(feeling, reason) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 30000);
             
@@ -740,119 +763,105 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        // Add additional headers that might help with CORS
-                        'Accept': 'application/json',
-                        'Cache-Control': 'no-cache',
                     },
                     body: JSON.stringify(requestData),
-                    // Use no-cors mode as a fallback
-                    mode: 'cors',
                     signal: controller.signal
                 });
                 
                 clearTimeout(timeoutId);
                 
                 updateDebugInfo('Response status', response.status);
-                updateDebugInfo('Response ok', response.ok);
                 
                 if (!response.ok) {
-                    // Try to get error details
-                    let errorMessage = `HTTP error! status: ${response.status}`;
-                    try {
-                        const errorText = await response.text();
-                        errorMessage += ` - ${errorText}`;
-                    } catch (e) {
-                        // Can't read error body
-                    }
-                    throw new Error(errorMessage);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const result = await response.json();
                 updateDebugInfo('Response data', JSON.stringify(result));
                 
                 if (result.status === 'success') {
-                    console.log('Datos guardados exitosamente');
                     showNotification('¡Gracias por compartir! Tus sentimientos fueron registrados.', 'success');
-                    updateDebugInfo('Google Sheets status', '✅ Success');
                 } else {
                     throw new Error(result.message || 'Error desconocido');
                 }
             } catch (error) {
                 clearTimeout(timeoutId);
-                updateDebugInfo('Fetch error', error.message);
-                
-                if (error.name === 'AbortError') {
-                    throw new Error('Tiempo de espera agotado. El servidor está tardando demasiado en responder.');
-                }
-                
-                // Try alternative method if the first one fails
-                if (error.message.includes('CORS') || error.message.includes('NetworkError')) {
-                    updateDebugInfo('Trying alternative method', '...');
-                    return await sendToGoogleSheetsAlternative(feeling, reason);
-                }
-                
                 throw error;
             }
         }
         
-        // Alternative method for sending data
-        async function sendToGoogleSheetsAlternative(feeling, reason) {
-            updateDebugInfo('Alternative method', 'Trying...');
-            
-            // Create a form to submit data
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = GOOGLE_SHEETS_CONFIG.webAppUrl;
-            form.style.display = 'none';
-            
-            // Add data as hidden fields
-            const feelingField = document.createElement('input');
-            feelingField.type = 'hidden';
-            feelingField.name = 'feeling';
-            feelingField.value = feeling;
-            form.appendChild(feelingField);
-            
-            const reasonField = document.createElement('input');
-            reasonField.type = 'hidden';
-            reasonField.name = 'reason';
-            reasonField.value = reason;
-            form.appendChild(reasonField);
-            
-            const timestampField = document.createElement('input');
-            timestampField.type = 'hidden';
-            timestampField.name = 'timestamp';
-            timestampField.value = new Date().toISOString();
-            form.appendChild(timestampField);
-            
-            // Add iframe to handle the form submission
-            const iframe = document.createElement('iframe');
-            iframe.name = 'google-sheets-iframe';
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
-            
-            form.target = 'google-sheets-iframe';
-            document.body.appendChild(form);
-            
-            // Submit the form
-            form.submit();
-            
-            // Wait a bit and then check if it worked
+        // Method 2: Form submission
+        async function sendWithForm(feeling, reason) {
             return new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    try {
-                        // Check if iframe loaded successfully
-                        updateDebugInfo('Alternative method', '✅ Submitted');
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = GOOGLE_SHEETS_CONFIG.webAppUrl;
+                form.style.display = 'none';
+                
+                const fields = [
+                    { name: 'feeling', value: feeling },
+                    { name: 'reason', value: reason },
+                    { name: 'timestamp', value: new Date().toISOString() }
+                ];
+                
+                fields.forEach(field => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = field.name;
+                    input.value = field.value;
+                    form.appendChild(input);
+                });
+                
+                const iframe = document.createElement('iframe');
+                iframe.name = 'gs-iframe-' + Date.now();
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+                
+                form.target = iframe.name;
+                document.body.appendChild(form);
+                
+                iframe.onload = () => {
+                    setTimeout(() => {
                         showNotification('¡Gracias por compartir! Tus sentimientos fueron registrados.', 'success');
+                        cleanup();
                         resolve();
-                    } catch (error) {
-                        updateDebugInfo('Alternative method error', error.message);
-                        reject(new Error('El método alternativo también falló.'));
-                    } finally {
-                        // Clean up
-                        document.body.removeChild(form);
-                        document.body.removeChild(iframe);
-                    }
-                }, 3000);
+                    }, 1000);
+                };
+                
+                iframe.onerror = () => {
+                    cleanup();
+                    reject(new Error('Form submission failed'));
+                };
+                
+                function cleanup() {
+                    document.body.removeChild(form);
+                    document.body.removeChild(iframe);
+                }
+                
+                form.submit();
+            });
+        }
+        
+        // Method 3: Image beacon (last resort)
+        async function sendWithImage(feeling, reason) {
+            const params = new URLSearchParams({
+                feeling: feeling,
+                reason: reason,
+                timestamp: new Date().toISOString()
+            });
+            
+            const img = new Image();
+            img.src = `${GOOGLE_SHEETS_CONFIG.webAppUrl}?${params.toString()}`;
+            
+            return new Promise((resolve) => {
+                img.onload = () => {
+                    showNotification('¡Gracias por compartir! Tus sentimientos fueron registrados.', 'success');
+                    resolve();
+                };
+                img.onerror = () => {
+                    resolve(); // Assume it worked anyway
+                };
+                setTimeout(resolve, 3000);
             });
         }
         
@@ -873,7 +882,6 @@
         
         // Verificar y sincronizar datos offline
         async function checkAndSyncOfflineData() {
-            // Solo sincronizar si estamos online
             if (!navigator.onLine) {
                 updateDebugInfo('Sync status', 'Offline - skipping');
                 return;
@@ -893,12 +901,11 @@
                     } catch (error) {
                         console.error('Falló la sincronización:', error);
                         updateDebugInfo('Sync error', error.message);
-                        break; // Detener si falla la sincronización
+                        break;
                     }
                 }
                 
                 if (syncedCount > 0) {
-                    // Eliminar datos sincronizados
                     const remainingData = offlineData.slice(syncedCount);
                     localStorage.setItem('feelingsPollOffline', JSON.stringify(remainingData));
                     showNotification('¡Todos los datos offline se sincronizaron exitosamente!', 'success');
@@ -1058,4 +1065,3 @@
     </script>
 </body>
 </html>
-
