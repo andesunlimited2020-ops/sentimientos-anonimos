@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anonymous Feelings Poll</title>
+    <title>Encuesta Anónima de Sentimientos</title>
     <link href="https://fonts.googleapis.com/css2?family=Rubik+Distressed&family=Permanent+Marker&family=Shadows+Into+Light&family=Caveat:wght@400;700&family=Righteous&family=Bungee&family=Creepster&family=Fredoka+One&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -454,36 +454,36 @@
 </head>
 <body>
     <header>
-        <h1>Sentimientos Anónimos</h1>
-        <p class="subtitle">Expresa cómo te sientes y porqué de manera anónima</p>
+        <h1>Encuesta Anónima de Sentimientos</h1>
+        <p class="subtitle">Compartí cómo te sentís y por qué, en total anonimato</p>
     </header>
     
     <main>
         <section class="form-container">
             <div class="input-module" id="feeling-module">
-                <h2>¿Cómo te sientes hoy?</h2>
-                <p class="instruction">Describe como te sientes en tus propias palabras</p>
-                <textarea id="feeling-input" placeholder="ej., Feliz, Ansioso, Emocionado, Triste, Cansado..." maxlength="500"></textarea>
+                <h2>¿Cómo te sentís hoy?</h2>
+                <p class="instruction">Describí tu estado emocional actual en pocas palabras</p>
+                <textarea id="feeling-input" placeholder="Ej: Feliz, Ansioso, Emocionado, Cansado..." maxlength="500"></textarea>
             </div>
             
             <div class="input-module" id="reason-module">
-                <h2>¿Que motiva ese sentimiento?</h2>
-                <p class="instruction">Expresa que motiva esos sentimientos (¡Opcional! Pero te sentirás mejor.)</p>
-                <textarea id="reason-input" placeholder="por ej., Porque terminé las clases, Mañana tengo exámen..." maxlength="500"></textarea>
+                <h2>¿Qué te hace sentir así?</h2>
+                <p class="instruction">Contanos qué hay detrás de tus sentimientos (opcional pero lo valoramos)</p>
+                <textarea id="reason-input" placeholder="Ej: Porque terminé un proyecto, tengo examen mañana..." maxlength="500"></textarea>
             </div>
         </section>
         
         <div class="submit-container">
-            <button class="submit-btn" id="submit-btn">Comparto mis Sentimientos</button>
+            <button class="submit-btn" id="submit-btn">Compartir Mis Sentimientos</button>
         </div>
         
         <section class="heard-section">
-            <h2 class="heard-title">¡Lo que hemos escuchado!</h2>
+            <h2 class="heard-title">¡Lo que escuchamos!</h2>
             <p style="text-align: center; color: white; margin-bottom: 20px; font-family: 'Caveat', cursive; font-size: 1.2rem;">
-                ¡Haz clic en las nubes para traerlas al frente • ¡Haz clic tres veces para una sorpresa!
+                Hacé clic en las nubes para traerlas al frente • ¡Triple clic para una sorpresa!
             </p>
             <div class="clouds-container" id="clouds-container">
-                <!-- Clouds will be dynamically added here -->
+                <!-- Las nubes se agregarán dinámicamente aquí -->
             </div>
         </section>
     </main>
@@ -493,19 +493,19 @@
         <div class="bobblehead-body"></div>
     </div>
     
-    <div class="notification" id="notification">¡Gracias por compartirlo!</div>
+    <div class="notification" id="notification">¡Gracias por compartir!</div>
     
     <div class="loading" id="loading">
         <div class="loading-spinner"></div>
     </div>
     
     <script>
-        // Google Sheets configuration - Apps Script Web App URL
+        // Configuración de Google Sheets - URL de Web App de Apps Script
         const GOOGLE_SHEETS_CONFIG = {
             webAppUrl: 'https://script.google.com/macros/s/AKfycbxvye-DR57M8fpKa462_yOFf-pljLwTD3R6NWyt4ixqhPzvityhpxaYQi38L7byhsj7/exec'
         };
         
-        // Random fonts for clouds
+        // Fuentes aleatorias para las nubes
         const randomFonts = [
             "'Permanent Marker', cursive",
             "'Shadows Into Light', cursive",
@@ -516,36 +516,36 @@
             "'Fredoka One', cursive"
         ];
         
-        // Sample data for demonstration
+        // Datos de ejemplo para demostración
         const sampleResponses = [
-            { feeling: "¡Hoy estoy feliz!", reason: "Brilla el sol y me encontraré con mis amigos." },
-            { feeling: "Estresado.", reason: "El trabajo es muy demandante en esta época del año." },
-            { feeling: "¡Exasperado!", reason: "No logre aprobar matematica." },
-            { feeling: "Me siento agradecido", reason: "Mi familia me dio un regalo por terminar el secundario." },
-            { feeling: "Un tanto ansioso", reason: "Mañana rindo exámen." }
+            { feeling: "¡Hoy me siento feliz!", reason: "El sol está brillando y vi a mis amigos." },
+            { feeling: "Un poco estresado.", reason: "El trabajo ha sido muy exigente últimamente." },
+            { feeling: "¡Emocionado por el fin de semana!", reason: "Tengo planes para hacer senderismo y es mi actividad favorita." },
+            { feeling: "Sintiéndome agradecido", reason: "Mi familia me sorprendió con un regalo detallado." },
+            { feeling: "Un poco ansioso", reason: "Tengo una presentación importante mañana." }
         ];
         
-        // Cloud management
+        // Gestión de nubes
         const maxClouds = 8;
         let cloudZIndex = 1;
         
-        // Initialize the page
+        // Inicializar la página
         document.addEventListener('DOMContentLoaded', function() {
-            // Load sample responses for demonstration
+            // Cargar respuestas de ejemplo para demostración
             loadSampleResponses();
             
-            // Set up event listeners
+            // Configurar event listeners
             document.getElementById('submit-btn').addEventListener('click', submitForm);
             
-            // Move bobblehead to active input
+            // Mover bobblehead al input activo
             document.getElementById('feeling-input').addEventListener('focus', moveBobblehead);
             document.getElementById('reason-input').addEventListener('focus', moveBobblehead);
             
-            // Check for offline data to sync
+            // Verificar datos offline para sincronizar
             checkAndSyncOfflineData();
         });
         
-        // Move bobblehead to the focused input
+        // Mover bobblehead al input enfocado
         function moveBobblehead(e) {
             const bobblehead = document.getElementById('bobblehead');
             const inputRect = e.target.getBoundingClientRect();
@@ -554,75 +554,97 @@
             bobblehead.style.top = `${inputRect.top - 50}px`;
         }
         
-        // Submit the form
+        // Enviar el formulario
         async function submitForm() {
             const feeling = document.getElementById('feeling-input').value.trim();
             const reason = document.getElementById('reason-input').value.trim();
             
             if (!feeling) {
-                showNotification('¿Cuenta como te sientes!', 'error');
+                showNotification('¡Contanos cómo te sentís!', 'error');
                 return;
             }
             
-            // Disable button and show loading
+            // Deshabilitar botón y mostrar loading
             const submitBtn = document.getElementById('submit-btn');
             submitBtn.disabled = true;
             showLoading(true);
             
             try {
-                // Send to Google Sheets
+                // Enviar a Google Sheets
                 await sendToGoogleSheets(feeling, reason);
                 
-                // Create cloud animation
+                // Crear animación de nube
                 createCloud(feeling, reason);
                 
-                // Clear the form
+                // Limpiar el formulario DESPUÉS de éxito
                 document.getElementById('feeling-input').value = '';
                 document.getElementById('reason-input').value = '';
                 
-                // Reset bobblehead position
+                // Resetear posición del bobblehead
                 const bobblehead = document.getElementById('bobblehead');
                 bobblehead.style.left = '';
                 bobblehead.style.top = '';
                 
             } catch (error) {
-                console.error('Error al enviar:', error);
-                // Save locally for later sync
-                saveOfflineData(feeling, reason);
+                console.error('Error de envío:', error);
+                
+                // Verificar si realmente estamos offline
+                if (!navigator.onLine) {
+                    // Solo guardar offline si realmente no hay conexión
+                    saveOfflineData(feeling, reason);
+                    showNotification('Guardado offline. Se sincronizará cuando vuelva la conexión.', 'info');
+                } else {
+                    // Si estamos online pero hay error, mostrar error de servidor
+                    showNotification('Error del servidor. Intentá de nuevo en unos minutos.', 'error');
+                }
             } finally {
                 submitBtn.disabled = false;
                 showLoading(false);
             }
         }
         
-        // Send data to Google Sheets via Apps Script
+        // Enviar datos a Google Sheets via Apps Script
         async function sendToGoogleSheets(feeling, reason) {
-            const response = await fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    feeling: feeling,
-                    reason: reason
-                })
-            });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const result = await response.json();
-            
-            if (result.status === 'Éxito') {
-                console.log('Información guardada correctamente');
-                showNotification('¡Gracias por compartirlo! Tus sentimientos están guardados.', 'Éxito');
-            } else {
-                throw new Error(result.message || 'Algo paso');
+            try {
+                const response = await fetch(GOOGLE_SHEETS_CONFIG.webAppUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        feeling: feeling,
+                        reason: reason
+                    }),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`Error HTTP! estado: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    console.log('Datos guardados exitosamente');
+                    showNotification('¡Gracias por compartir! Tus sentimientos fueron registrados.', 'success');
+                } else {
+                    throw new Error(result.message || 'Error desconocido');
+                }
+            } catch (error) {
+                clearTimeout(timeoutId);
+                if (error.name === 'AbortError') {
+                    throw new Error('Tiempo de espera agotado. Intentá de nuevo.');
+                }
+                throw error;
             }
         }
         
-        // Save data offline for later sync
+        // Guardar datos offline para sincronizar después
         function saveOfflineData(feeling, reason) {
             const offlineData = {
                 timestamp: new Date().toISOString(),
@@ -633,81 +655,89 @@
             const storedData = JSON.parse(localStorage.getItem('feelingsPollOffline') || '[]');
             storedData.push(offlineData);
             localStorage.setItem('feelingsPollOffline', JSON.stringify(storedData));
-            
-            showNotification('Se guardo sin conexión. Se sincronizara cuando haya conexión nuevamente.', 'info');
         }
         
-        // Check and sync offline data
+        // Verificar y sincronizar datos offline
         async function checkAndSyncOfflineData() {
+            // Solo sincronizar si estamos online
+            if (!navigator.onLine) {
+                return;
+            }
+            
             const offlineData = JSON.parse(localStorage.getItem('feelingsPollOffline') || '[]');
             
             if (offlineData.length > 0) {
-                showNotification(`Syncing ${offlineData.length} offline submissions...`, 'info');
+                showNotification(`Sincronizando ${offlineData.length} envíos offline...`, 'info');
                 
+                let syncedCount = 0;
                 for (const data of offlineData) {
                     try {
                         await sendToGoogleSheets(data.feeling, data.reason);
+                        syncedCount++;
                     } catch (error) {
-                        console.error('Falla al sincronizar:', error);
-                        break; // Stop if sync fails
+                        console.error('Falló la sincronización:', error);
+                        break; // Detener si falla la sincronización
                     }
                 }
                 
-                // Clear synced data
-                localStorage.removeItem('feelingsPollOffline');
-                showNotification('¡Toda la información sin conexión se sincronizo correctamente!', 'Éxito');
+                if (syncedCount > 0) {
+                    // Eliminar datos sincronizados
+                    const remainingData = offlineData.slice(syncedCount);
+                    localStorage.setItem('feelingsPollOffline', JSON.stringify(remainingData));
+                    showNotification('¡Todos los datos offline se sincronizaron exitosamente!', 'success');
+                }
             }
         }
         
-        // Create a cloud with the submission
+        // Crear una nube con el envío
         function createCloud(feeling, reason) {
             const container = document.getElementById('clouds-container');
             const cloud = document.createElement('div');
             cloud.className = 'cloud';
             
-            // Manage cloud count
+            // Gestionar cantidad de nubes
             const clouds = container.querySelectorAll('.cloud');
             if (clouds.length >= maxClouds) {
                 container.removeChild(clouds[0]);
             }
             
-            // Random position
+            // Posición aleatoria
             const maxLeft = container.offsetWidth - 300;
             const maxTop = container.offsetHeight - 200;
             cloud.style.left = `${Math.random() * maxLeft}px`;
             cloud.style.top = `${Math.random() * maxTop}px`;
             
-            // Random animation delay
+            // Retraso de animación aleatorio
             cloud.style.animationDelay = `${Math.random() * 5}s`;
             
-            // Random font
+            // Fuente aleatoria
             const randomFont = randomFonts[Math.floor(Math.random() * randomFonts.length)];
             cloud.style.setProperty('--random-font', randomFont);
             
-            // Store click data
+            // Almacenar datos de clic
             cloud.clickCount = 0;
             cloud.lastClickTime = 0;
             
-            // Add click event listener
+            // Agregar event listener de clic
             cloud.addEventListener('click', function(e) {
                 handleCloudClick(this, e);
             });
             
-            // Combine feeling and reason
-            const combinedText = `<strong>Sentimiento:</strong> ${feeling}<br><strong>Motivo:</strong> ${reason}`;
-            cloud.innerHTML = `<div class="cloud-text">${combinedText}</div><div class="cloud-instruction">Clic para traer al frente • Clic tres veces para una sorpresa</div>`;
+            // Combinar feeling y reason
+            const combinedText = `<strong>Sentimiento:</strong> ${feeling}<br><strong>Por qué:</strong> ${reason}`;
+            cloud.innerHTML = `<div class="cloud-text">${combinedText}</div><div class="cloud-instruction">Clic para traer al frente • Triple clic para sorpresa</div>`;
             
             container.appendChild(cloud);
         }
         
-        // Handle cloud click events
+        // Manejar eventos de clic en nubes
         function handleCloudClick(cloud, event) {
             const currentTime = Date.now();
             
-            // Bring cloud to front
+            // Traer nube al frente
             bringToFront(cloud);
             
-            // Check for triple-click
+            // Verificar triple clic
             if (currentTime - cloud.lastClickTime < 5000) {
                 cloud.clickCount++;
                 
@@ -722,7 +752,7 @@
             cloud.lastClickTime = currentTime;
         }
         
-        // Bring cloud to front
+        // Traer nube al frente
         function bringToFront(cloud) {
             const clouds = document.querySelectorAll('.cloud');
             clouds.forEach(c => c.classList.remove('front'));
@@ -732,7 +762,7 @@
             cloud.style.zIndex = cloudZIndex;
         }
         
-        // Trigger heart animation
+        // Activar animación de corazón
         function triggerHeartAnimation(cloud) {
             cloud.classList.add('pop');
             
@@ -749,10 +779,10 @@
                 cloud.classList.remove('pop');
             }, 1500);
             
-            showNotification('💖 ¡Encontraste el corazón secreto! 💖', 'Felicitaciones');
+            showNotification('💖 ¡Encontraste el corazón secreto! 💖', 'success');
         }
         
-        // Show notification
+        // Mostrar notificación
         function showNotification(message, type) {
             const notification = document.getElementById('notification');
             notification.textContent = message;
@@ -774,7 +804,7 @@
             }, 3000);
         }
         
-        // Show/hide loading indicator
+        // Mostrar/ocultar indicador de carga
         function showLoading(show) {
             const loading = document.getElementById('loading');
             if (show) {
@@ -784,7 +814,7 @@
             }
         }
         
-        // Load sample responses for demonstration
+        // Cargar respuestas de ejemplo para demostración
         function loadSampleResponses() {
             sampleResponses.forEach((response, index) => {
                 setTimeout(() => {
@@ -792,9 +822,17 @@
                 }, index * 500);
             });
         }
+        
+        // Escuchar cambios de conexión
+        window.addEventListener('online', function() {
+            console.log('Conexión restaurada');
+            checkAndSyncOfflineData();
+        });
+        
+        window.addEventListener('offline', function() {
+            console.log('Conexión perdida');
+            showNotification('Sin conexión. Los datos se guardarán localmente.', 'info');
+        });
     </script>
 </body>
 </html>
-
-
-
